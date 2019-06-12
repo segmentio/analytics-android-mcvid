@@ -21,7 +21,6 @@ You will need to provide some parameters to make the tests work end to end:
 export TEST_ADOBE_ORGANIZATION_ID="myTestOrganizationId";
 export TEST_ADOBE_REGION="3";
 export TEST_ADOBE_CUSTOMER_ID="DSID_20914%01myTestCustomerId"
-
 ```
 
 Then use gradle to run the tests:
@@ -34,7 +33,6 @@ as VM options
 ```
 -Dtest.adobe.organization_id=myTestOrganizationId -Dtest.adobe.region=3 -Dtest.adobe.customer_id=DSID_20914%01myTestCustomerId
 ```
-
 
 ## Usage
 
@@ -56,6 +54,10 @@ analytics = new Analytics.Builder(this, "write_key")
 ```
 
 Please see [our documentation](https://segment.com/docs/sources/mobile/android/) for more information.
+
+## Advertising ID
+This middleware tries to sync the device's [advertising ID]() to Adobe's visitor ID, but will skip this operation
+if the advertising ID is not available. Users of this middleware can disable completely this operation manually
 
 ## Other documentation
 

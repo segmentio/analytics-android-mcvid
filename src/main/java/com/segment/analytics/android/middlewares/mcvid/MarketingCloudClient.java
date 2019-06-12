@@ -45,12 +45,29 @@ public interface MarketingCloudClient {
      */
     public class MarketingCloudException extends Exception {
 
+        private boolean badInput;
+
         public MarketingCloudException(String message) {
+            this(message, false);
+        }
+
+        public MarketingCloudException(String message, boolean badInput) {
             super(message);
+            this.badInput = badInput;
         }
 
         public MarketingCloudException(String message, Throwable cause) {
             super(message, cause);
+        }
+
+        /**
+         * Set when the exception was caused by bad input in the request.
+         *
+         * @return <code>true</code> if the exception was caused by bad input (invalid
+         * organization ID, invalid advertisingId, etc). <code>false</code> otherwise.
+         */
+        public boolean isBadInput() {
+            return badInput;
         }
     }
 
@@ -212,7 +229,7 @@ public interface MarketingCloudClient {
                             }
                         }
 
-                        throw new MarketingCloudException(String.format("Received error (%d): %s", code, errorMessage));
+                        throw new MarketingCloudException(String.format("Received error (%d): %s", code, errorMessage), true);
 
                     } else if (fieldName.equals(VID_FIELD)) {
                         return reader.nextString();
