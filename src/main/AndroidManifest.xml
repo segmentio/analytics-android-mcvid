@@ -1,1 +1,3 @@
-<manifest package="com.segment.analytics.android.middlewares.mcvid"/>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.segment.analytics.android.middlewares.mcvid">
+    <uses-permission android:name="android.permission.INTERNET"/>
+</manifest>

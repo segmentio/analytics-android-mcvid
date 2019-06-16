@@ -49,14 +49,33 @@ dependencies {
     }
 
     api 'com.segment.analytics.android:analytics:4.3.1'
+    api 'com.google.android.gms:play-services:6.5.+'
 
     testImplementation 'com.segment.analytics.android:analytics-tests:4.3.1'
+    testImplementation 'androidx.test:core:1.+'
     testImplementation 'junit:junit:4.12'
+    testImplementation 'org.mockito:mockito-core:2.+'
+    testImplementation 'org.robolectric:robolectric:4.3'
 
     // Required for local (non-android) testing
     testImplementation 'org.json:json:20180813'
 
 }
+
+android {
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+
+            all {
+                systemProperty 'test.adobe.organization_id', System.getenv('TEST_ADOBE_ORGANIZATION_ID')
+                systemProperty 'test.adobe.customer_id', System.getenv('TEST_ADOBE_CUSTOMER_ID')
+                systemProperty 'test.adobe.region', System.getenv('TEST_ADOBE_REGION')
+            }
+        }
+    }
+}
+
 
 apply from: rootProject.file('gradle/attach-jar.gradle')
 apply from: rootProject.file('gradle/upload.gradle')

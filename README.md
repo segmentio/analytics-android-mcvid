@@ -14,6 +14,34 @@ To install the middleware, simply add this line to your gradle file:
 compile 'com.segment.analytics.android.middlewares.mcvid:+'
 ```
 
+## Permissions
+
+The middleware performs HTTP requests in an executor, so it requires internet access:
+```
+<uses-permission android:name="android.permission.INTERNET"/>
+```
+Syncing the Visitor ID with the device's advertising ID requires access to Google Play Services.
+
+## Testing
+
+You will need to provide some parameters to make the tests work end to end:
+```
+export TEST_ADOBE_ORGANIZATION_ID="myTestOrganizationId";
+export TEST_ADOBE_REGION="3";
+export TEST_ADOBE_CUSTOMER_ID="DSID_20914%01myTestCustomerId"
+```
+
+Then use gradle to run the tests:
+```
+$ ./gradlew test
+```
+
+If you are using Android Studio, you will need to pass that configuration as part of the JVM arguments. In the Run... dialog, add
+as VM options
+```
+-Dtest.adobe.organization_id=myTestOrganizationId -Dtest.adobe.region=3 -Dtest.adobe.customer_id=DSID_20914%01myTestCustomerId
+```
+
 ## Usage
 
 After adding the dependency, you must register the middleware with our SDK.  To do this, import the package:
@@ -29,11 +57,26 @@ And add the following line:
 ```
 analytics = new Analytics.Builder(this, "write_key")
                 ...
-                .middleware(new MCVIDMiddleware())
+                .middleware(new MarketingCloudMiddleware(this, "my organization ID", region))
                 .build();
 ```
 
+You can also customize the implementation for the Visitor ID client or store using the builder.
+```
+MarketingCloudMiddleware mcvid = new MarketingCloudMiddleware.Builder().withClient(client).withStore(store).withActivity(this).build();
+analytics = new Analytics.Builder(this, "write_key")
+                ...
+                .middleware(mcvid)
+                .build();
+```
+
+
 Please see [our documentation](https://segment.com/docs/sources/mobile/android/) for more information.
+
+## Other documentation
+
+* [Marketing Cloud Service](https://marketing.adobe.com/resources/help/en_US/mcvid/)
+* [Direct integration with Cloud ID Service](https://marketing.adobe.com/resources/help/en_US/mcvid/mcvid-direct-integration.html)
 
 ## License
 
