@@ -14,6 +14,14 @@ To install the middleware, simply add this line to your gradle file:
 compile 'com.segment.analytics.android.middlewares.mcvid:+'
 ```
 
+## Permissions
+
+The middleware performs HTTP requests in an executor, so it requires internet access:
+```
+<uses-permission android:name="android.permission.INTERNET"/>
+```
+Syncing the Visitor ID with the device's advertising ID requires access to Google Play Services.
+
 ## Testing
 
 You will need to provide some parameters to make the tests work end to end:
@@ -49,15 +57,21 @@ And add the following line:
 ```
 analytics = new Analytics.Builder(this, "write_key")
                 ...
-                .middleware(new MCVIDMiddleware("my organization ID", region))
+                .middleware(new MarketingCloudMiddleware(this, "my organization ID", region))
                 .build();
 ```
 
-Please see [our documentation](https://segment.com/docs/sources/mobile/android/) for more information.
+You can also customize the implementation for the Visitor ID client or store using the builder.
+```
+MarketingCloudMiddleware mcvid = new MarketingCloudMiddleware.Builder().withClient(client).withStore(store).withActivity(this).build();
+analytics = new Analytics.Builder(this, "write_key")
+                ...
+                .middleware(mcvid)
+                .build();
+```
 
-## Advertising ID
-This middleware tries to sync the device's [advertising ID]() to Adobe's visitor ID, but will skip this operation
-if the advertising ID is not available. Users of this middleware can disable completely this operation manually
+
+Please see [our documentation](https://segment.com/docs/sources/mobile/android/) for more information.
 
 ## Other documentation
 
