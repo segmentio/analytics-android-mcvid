@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * A Segment Middleware for injecting Adobe Marketing Cloud Visitor IDs to
@@ -36,7 +37,7 @@ public class MarketingCloudMiddleware implements Middleware {
      */
     public MarketingCloudMiddleware(Activity activity, String organizationId, int region) {
         client = new MarketingCloudClient.HttpClient(organizationId, region);
-        manager = new VisitorIdManager.ExecutorVisitorIdManager(activity, Executors.newSingleThreadExecutor(), client, Logger.with(Analytics.LogLevel.INFO));
+        manager = new VisitorIdManager.AsyncVisitorIdManager(activity, Executors.newSingleThreadScheduledExecutor(), client, Logger.with(Analytics.LogLevel.INFO));
     }
 
     /**
@@ -114,14 +115,14 @@ public class MarketingCloudMiddleware implements Middleware {
         private Activity activity;
         private Context context;
         private MarketingCloudClient client;
-        private ExecutorService executor;
+        private ScheduledExecutorService executor;
         private VisitorIdStore store;
         private VisitorIdManager manager;
         private Logger logger;
 
         public Builder() {
             logger = Logger.with(Analytics.LogLevel.INFO);
-            executor = Executors.newSingleThreadExecutor();
+            executor = Executors.newSingleThreadScheduledExecutor();
         }
 
         /**
@@ -156,7 +157,7 @@ public class MarketingCloudMiddleware implements Middleware {
                 context = activity.getApplicationContext();
             }
 
-            manager = new VisitorIdManager.ExecutorVisitorIdManager(context, executor, client, store, logger);
+            manager = new VisitorIdManager.AsyncVisitorIdManager(context, executor, client, store, logger);
             return new MarketingCloudMiddleware(manager);
         }
 
@@ -242,7 +243,7 @@ public class MarketingCloudMiddleware implements Middleware {
          * @param executor Executor.
          * @return The builder instance.
          */
-        public Builder withExecutor(ExecutorService executor) {
+        public Builder withExecutor(ScheduledExecutorService executor) {
             assertArgument("executor", executor);
             this.executor = executor;
             return this;

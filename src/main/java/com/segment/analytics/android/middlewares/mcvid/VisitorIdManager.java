@@ -7,9 +7,12 @@ import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.segment.analytics.integrations.Logger;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Main API to get the Visitor ID. Most implementations should use directly
@@ -27,21 +30,24 @@ public interface VisitorIdManager {
     public String getVisitorId();
 
     /**
-     * The default implementation of the manager that uses an executor for requesting the Visitor ID, and
-     * the Shared Preferences store.
+     * The default implementation of the manager that uses a scheduler for requesting the Visitor ID, and
+     * sync it with the device's advertising ID.
      */
-    public class ExecutorVisitorIdManager implements VisitorIdManager {
+    public class AsyncVisitorIdManager implements VisitorIdManager {
+
+        static int MAX_RETRIES = 10;
+        static boolean AUTOSTART = true;
 
         private Context context;
-        private ExecutorService executor;
-        private Future<String> visitorId;
+        private ScheduledExecutorService executor;
+        private AsyncFuture<String> visitorId;
         private MarketingCloudClient client;
         private VisitorIdStore store;
         private ErrorListener errorListener;
         private Logger logger;
         private final Object listenerLock = new Object();
 
-        Future<Boolean> synced;
+        AsyncFuture<Boolean> synced;
 
         /**
          * Creates the manager with the default parameters.
@@ -51,7 +57,7 @@ public interface VisitorIdManager {
          * @param client Marketing Cloud client to retrieve the Visitor ID and sync advertising ID.
          * @param logger Logger.
          */
-        public ExecutorVisitorIdManager(Activity activity, ExecutorService executor, MarketingCloudClient client, Logger logger) {
+        public AsyncVisitorIdManager(Activity activity, ScheduledExecutorService executor, MarketingCloudClient client, Logger logger) {
             this(activity.getApplicationContext(), executor, client, new VisitorIdStore.SharedPreferencesStore(activity), logger);
         }
 
@@ -64,14 +70,22 @@ public interface VisitorIdManager {
          * @param store Local store to get and set the visitor ID between different application executions.
          * @param logger Logger.
          */
-        public ExecutorVisitorIdManager(Context context, ExecutorService executor, MarketingCloudClient client, VisitorIdStore store, Logger logger) {
+        public AsyncVisitorIdManager(Context context, ScheduledExecutorService executor, MarketingCloudClient client, VisitorIdStore store, Logger logger) {
             this.context = context;
             this.executor = executor;
             this.logger = logger;
             this.client = client;
             this.store = store;
             this.errorListener = null;
-            this.visitorId = this.executor.submit(this.retrieveVisitorId());
+            this.visitorId = new AsyncFuture<>();
+            this.synced = new AsyncFuture<>();
+            if (AUTOSTART) {
+                this.start();
+            }
+        }
+
+        void start() {
+            this.executor.submit(this.exponentialBackoffRetry(visitorId, this.retrieveVisitorId()));
         }
 
         /**
@@ -87,7 +101,8 @@ public interface VisitorIdManager {
                     try {
                         String previousVisitorId = store.get();
                         if (previousVisitorId != null) {
-                            synced = executor.submit(syncVisitorId(previousVisitorId));
+                            synced.reset();
+                            executor.submit(exponentialBackoffRetry(synced, syncVisitorId(previousVisitorId)));
                             return previousVisitorId;
                         }
                     } catch (Exception e) {
@@ -97,8 +112,15 @@ public interface VisitorIdManager {
 
                     String visitorId;
                     try {
-                        // TODO: Implement exponential backoff retries
                         visitorId = client.getVisitorID();
+                    } catch (MarketingCloudClient.MarketingCloudException e) {
+                        handleError("Error getting visitor ID from service: %s", e);
+                        if (e.isBadInput()) {
+                            // Do not retry bad input.
+                            return null;
+                        }
+                        // Retry
+                        throw e;
                     } catch (Exception e) {
                         handleError("Error getting visitor ID from service: %s", e);
                         // Retry
@@ -111,7 +133,8 @@ public interface VisitorIdManager {
                         handleError("Error storing visitor ID: %s. Ignored", e);
                     }
 
-                    synced = executor.submit(syncVisitorId(visitorId));
+                    synced.reset();
+                    executor.submit(exponentialBackoffRetry(synced, syncVisitorId(visitorId)));
 
                     return visitorId;
                 }
@@ -152,8 +175,15 @@ public interface VisitorIdManager {
                     }
 
                     try {
-                        // TODO: Implement exponential backoff retries
                         client.idSync(visitorId, advertisingId);
+                    } catch (MarketingCloudClient.MarketingCloudException e) {
+                        handleError("Error syncing visitor ID and advertising ID: %s", e);
+                        if (e.isBadInput()) {
+                            // Do not retry bad input.
+                            return null;
+                        }
+                        // Retry
+                        throw e;
                     } catch (Exception e) {
                         handleError("Error syncing visitor ID and advertising ID: %s", e);
                         // Retry
@@ -172,6 +202,58 @@ public interface VisitorIdManager {
         }
 
         /**
+         * Performs the operation, storing the result in the future object. If the operation fails, it will retry
+         * using a simple backoff exponential algorithm.
+         *
+         * @param result Future where to store the result.
+         * @param operation Operation to perform.
+         * @param <T> Type of the value.
+         *
+         * @return A runnable to execute.
+         */
+        protected <T> Runnable exponentialBackoffRetry(AsyncFuture<T> result, Callable<T> operation) {
+            return exponentialBackoffRetry(result, operation, 0);
+        }
+
+        /**
+         * Performs the operation, storing the result in the future object. If the operation fails, it will retry
+         * using a simple backoff exponential algorithm.
+         *
+         * @param result Future where to store the result.
+         * @param operation Operation to perform.
+         * @param retryNumber Number of the current retry.
+         * @param <T> Type of the value.
+         *
+         * @return A runnable to execute.
+         */
+        protected <T> Runnable exponentialBackoffRetry(final AsyncFuture<T> result, final Callable<T> operation, final int retryNumber) {
+
+            return new Runnable() {
+
+                @Override
+                public void run() {
+                    T value;
+                    try {
+                        // Perform the action
+                        value = operation.call();
+                    } catch (Exception e) {
+                        if (retryNumber > MAX_RETRIES) {
+                            result.putException(e);
+                            return;
+                        }
+
+                        // Schedule next retry (no need for random delays)
+                        long delay = Math.round(Math.pow(2, retryNumber));
+                        executor.schedule(exponentialBackoffRetry(result, operation, retryNumber + 1), delay, TimeUnit.SECONDS);
+                        return;
+                    }
+
+                    result.put(value);
+                }
+            };
+        }
+
+        /**
          * Retrieves Adobe's Marketing Cloud Visitor ID for the device's advertising ID. This
          * call is thread-safe and not blocking.
          *
@@ -181,28 +263,32 @@ public interface VisitorIdManager {
         @Override
         public String getVisitorId() {
             if (visitorId.isDone()) {
+                String vId;
                 try {
-                    String vId = visitorId.get();
-
-                    // Only to perform a retry if needed.
-                    if (synced.isDone()) {
-                        try {
-                            synced.get();
-                        } catch (InterruptedException | ExecutionException e) {
-                            handleError("Error syncing visitor ID: %s. Retrying", e);
-
-                            // Retry
-                            synced = this.executor.submit(this.syncVisitorId(vId));
-                        }
-                    }
-
-                    return vId;
+                    vId = visitorId.get();
                 } catch (InterruptedException | ExecutionException e) {
                     handleError("Error getting visitor ID: %s. Retrying", e);
 
                     // Retry
-                    visitorId = this.executor.submit(this.retrieveVisitorId());
+                    visitorId.reset();
+                    this.executor.submit(this.exponentialBackoffRetry(visitorId, this.retrieveVisitorId()));
+                    return null;
                 }
+
+                // Only to perform a retry if needed.
+                if (synced.isDone()) {
+                    try {
+                        synced.get();
+                    } catch (InterruptedException | ExecutionException e) {
+                        handleError("Error syncing visitor ID: %s. Retrying", e);
+
+                        // Retry
+                        synced.reset();
+                        this.executor.submit(this.exponentialBackoffRetry(synced, this.syncVisitorId(vId)));
+                    }
+                }
+
+                return vId;
             }
             return null;
         }
@@ -285,6 +371,103 @@ public interface VisitorIdManager {
          */
         public void onError(Exception exception);
 
+    }
+
+    /**
+     * Basic implementation of a future for async operations. It only works for sequential
+     * operations (one thread setting the result).
+     * @param <T> Result of the future.
+     */
+    class AsyncFuture<T> implements Future<T> {
+
+        private CountDownLatch latch;
+        private Exception exception;
+        private T value;
+
+        public AsyncFuture() {
+            latch = new CountDownLatch(1);
+        }
+
+        /**
+         * Not supported.
+         * @param mayInterruptIfRunning Ignored.
+         * @throws UnsupportedOperationException always.
+         * @return nothing.
+         */
+        @Override
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            throw new UnsupportedOperationException("Cancel not supported");
+        }
+
+        /**
+         * Not supported.
+         * @throws UnsupportedOperationException always.
+         * @return nothing.
+         */
+        @Override
+        public boolean isCancelled() {
+            throw new UnsupportedOperationException("Cancel not supported");
+        }
+
+        @Override
+        public boolean isDone() {
+            return latch.getCount() == 0;
+        }
+
+        /**
+         * Blocks the thread until the value is available.
+         *
+         * @throws ExecutionException If the execution has thrown any exception.
+         * @throws InterruptedException If the thread got interrupted.
+         * @return The value.
+         */
+        @Override
+        public T get() throws ExecutionException, InterruptedException {
+            latch.await();
+            if (exception != null) {
+                throw new ExecutionException(exception);
+            }
+            return value;
+        }
+
+        /**
+         * Blocks the thread until the value is available. Or times out.
+         * @param timeout Timeout.
+         * @param unit Unit for the timeout.
+         *
+         * @throws ExecutionException If the execution has thrown any exception.
+         * @throws InterruptedException If the thread got interrupted.
+         * @throws TimeoutException If the value is not available for the defined timeout.
+         *
+         * @return The value.
+         */
+        @Override
+        public T get(long timeout, TimeUnit unit) throws ExecutionException, InterruptedException, TimeoutException {
+            if (latch.await(timeout, unit)) {
+                if (exception != null) {
+                    throw new ExecutionException(exception);
+                }
+                return value;
+            } else {
+                throw new TimeoutException();
+            }
+        }
+
+        void put(T value) {
+            this.value = value;
+            latch.countDown();
+        }
+
+        void putException(Exception exception) {
+            this.exception = exception;
+            latch.countDown();
+        }
+
+        synchronized void reset() {
+            latch = new CountDownLatch(1);
+            value = null;
+            exception = null;
+        }
     }
 
 }
