@@ -3,8 +3,10 @@ package com.segment.analytics.android.middlewares.mcvid;
 import android.app.Activity;
 import android.content.Context;
 
+import com.segment.analytics.Analytics;
 import com.segment.analytics.Middleware;
 import com.segment.analytics.integrations.BasePayload;
+import com.segment.analytics.integrations.Logger;
 import com.segment.analytics.integrations.TrackPayload;
 
 import org.junit.Assert;
@@ -20,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 
 @RunWith(RobolectricTestRunner.class)
 public class MarketingCloudMiddlewareTest {
@@ -35,6 +38,30 @@ public class MarketingCloudMiddlewareTest {
     public void initialize() {
         MockitoAnnotations.initMocks(this);
         middleware = new MarketingCloudMiddleware(manager);
+    }
+
+    @Test
+    public void getVisitorId() {
+        String visitorId = "visitorId";
+        Mockito.when(manager.getVisitorId()).thenReturn(visitorId);
+        Assert.assertEquals(visitorId, middleware.getVisitorId());
+    }
+
+    @Test
+    public void getClient() {
+        MarketingCloudMiddleware middleware = new MarketingCloudMiddleware(activity, "organizationId", 3);
+        Assert.assertNotNull(middleware.getClient());
+    }
+
+    @Test
+    public void getClient_builder() {
+        MarketingCloudMiddleware middleware = new MarketingCloudMiddleware.Builder().withOrganizationId("organizationId").withRegion(3).withActivity(activity).build();
+        Assert.assertNotNull(middleware.getClient());
+    }
+
+    @Test
+    public void getClient_null() {
+        Assert.assertNull(middleware.getClient());
     }
 
     @Test
@@ -146,6 +173,16 @@ public class MarketingCloudMiddlewareTest {
     @Test
     public void builder_client() {
         new MarketingCloudMiddleware.Builder().withActivity(activity).withClient(client).build();
+    }
+
+    @Test
+    public void builder_executor() {
+        new MarketingCloudMiddleware.Builder().withActivity(activity).withClient(client).withExecutor(Executors.newSingleThreadScheduledExecutor()).build();
+    }
+
+    @Test
+    public void builder_logger() {
+        new MarketingCloudMiddleware.Builder().withActivity(activity).withClient(client).withLogger(Logger.with(Analytics.LogLevel.INFO)).build();
     }
 
     @Test

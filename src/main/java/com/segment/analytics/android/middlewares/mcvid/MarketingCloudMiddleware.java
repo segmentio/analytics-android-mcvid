@@ -11,7 +11,6 @@ import com.segment.analytics.integrations.Logger;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -97,12 +96,21 @@ public class MarketingCloudMiddleware implements Middleware {
     }
 
     /**
-     * Retrieves the Marketing Cloud client.
+     * Retrieves the Marketing Cloud client. Only available when using the default Visitor Id Manager.
      *
-     * @return The client. Returns null if the client is not the default one.
+     * @return The client.
      */
     public MarketingCloudClient getClient() {
         return client;
+    }
+
+    /**
+     * Retrieves the visitor ID. Useful to make your own id syncs.
+     *
+     * @return Visitor Id if available, null otherwise.
+     */
+    public String getVisitorId() {
+        return manager.getVisitorId();
     }
 
     /**
@@ -120,10 +128,7 @@ public class MarketingCloudMiddleware implements Middleware {
         private VisitorIdManager manager;
         private Logger logger;
 
-        public Builder() {
-            logger = Logger.with(Analytics.LogLevel.INFO);
-            executor = Executors.newSingleThreadScheduledExecutor();
-        }
+        public Builder() {}
 
         /**
          * Builds the instance.
@@ -134,6 +139,10 @@ public class MarketingCloudMiddleware implements Middleware {
         public MarketingCloudMiddleware build() {
             if (manager != null) {
                 return new MarketingCloudMiddleware(manager);
+            }
+
+            if (logger == null) {
+                logger = Logger.with(Analytics.LogLevel.INFO);
             }
 
             if (client == null) {
@@ -157,8 +166,15 @@ public class MarketingCloudMiddleware implements Middleware {
                 context = activity.getApplicationContext();
             }
 
+            if (executor == null) {
+                executor = Executors.newSingleThreadScheduledExecutor();
+            }
+
             manager = new VisitorIdManager.AsyncVisitorIdManager(context, executor, client, store, logger);
-            return new MarketingCloudMiddleware(manager);
+
+            MarketingCloudMiddleware middleware = new MarketingCloudMiddleware(manager);
+            middleware.client = client;
+            return middleware;
         }
 
 
@@ -251,7 +267,8 @@ public class MarketingCloudMiddleware implements Middleware {
 
         /**
          * Allows to use a custom implementation of the manager. If this method is called, the
-         * others in this builder have no effect.
+         * others in this builder have no effect. Also, the middleware won't have access to the client
+         * directly (middleware.getClient() will return always null).
          *
          * @param manager Custom visitor ID Manager.
          * @return The builder instance.
