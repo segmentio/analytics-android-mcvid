@@ -6,6 +6,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
 
@@ -25,7 +26,8 @@ public class MarketingCloudClientTest {
 
     private final String DEFAULT_TEST_ORGANIZATION_ID = "organizationId";
     private final String DEFAULT_TEST_REGION = "3";
-    private final String DEFAULT_CUSTOMER_ID = "DSID_20914%01customerId";
+    private final String DEFAULT_INTEGRATION_CODE = "DSID_20914";
+    private final String DEFAULT_CUSTOMER_ID = "customerId";
 
     private int region;
     private String organizationId;
@@ -60,14 +62,23 @@ public class MarketingCloudClientTest {
 
     @Test
     public void idSync() throws MarketingCloudClient.MarketingCloudException, IOException {
-        String vid = client.getVisitorID();
-        client.idSync(vid, customerId);
+        String visitorId = client.getVisitorID();
+        final String expectedUrl = String.format("https://dpm.demdex.net/id?d_mid=%s&d_ver=2&dcs_region=%d&d_orgid=%s@AdobeOrg&d_rtbd=json&d_cid_ic=%s%%01%s", visitorId, region, organizationId, DEFAULT_INTEGRATION_CODE, customerId);
+
+        MarketingCloudClient.HttpClient spy = Mockito.spy(client);
+        spy.idSync(visitorId, DEFAULT_INTEGRATION_CODE, customerId);
+        Mockito.verify(spy, Mockito.times(1)).sendRequest(Mockito.argThat(new ArgumentMatcher<URL>() {
+            @Override
+            public boolean matches(URL argument) {
+                return expectedUrl.equals(argument.toString());
+            }
+        }));
     }
 
     @Test(expected = MarketingCloudClient.MarketingCloudException.class)
     public void idSync_invalidVisitorId() throws MarketingCloudClient.MarketingCloudException, IOException {
         String vid = "this is invalid big time";
-        client.idSync(vid, customerId);
+        client.idSync(vid, DEFAULT_INTEGRATION_CODE, customerId);
     }
 
     @Test

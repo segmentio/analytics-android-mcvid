@@ -35,6 +35,8 @@ public interface VisitorIdManager {
      */
     public class AsyncVisitorIdManager implements VisitorIdManager {
 
+        private final static String ANDROID_INTEGRATION_CODE = "DSID_20914";
+
         static int MAX_RETRIES = 10;
         static boolean AUTOSTART = true;
 
@@ -175,7 +177,7 @@ public interface VisitorIdManager {
                     }
 
                     try {
-                        client.idSync(visitorId, advertisingId);
+                        client.idSync(visitorId, ANDROID_INTEGRATION_CODE, advertisingId);
                     } catch (MarketingCloudClient.MarketingCloudException e) {
                         handleError("Error syncing visitor ID and advertising ID: %s", e);
                         if (e.isBadInput()) {
