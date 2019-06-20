@@ -23,7 +23,7 @@ public class MarketingCloudMiddleware implements Middleware {
 
     private final static String INTEGRATIONS_KEY = "integrations";
     private final static String ADOBE_ANALYTICS_KEY = "Adobe Analytics";
-    private final static String MCVID_KEY = "mcvid";
+    private final static String MCVID_KEY = "marketingCloudVisitorId";
 
     private VisitorIdManager manager;
     private MarketingCloudClient client;

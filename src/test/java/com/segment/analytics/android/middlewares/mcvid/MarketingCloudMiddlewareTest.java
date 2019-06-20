@@ -52,7 +52,7 @@ public class MarketingCloudMiddlewareTest {
 
             @Override
             public void proceed(BasePayload payload) {
-                value.complete(payload.integrations().getValueMap("Adobe Analytics").getString("mcvid"));
+                value.complete(payload.integrations().getValueMap("Adobe Analytics").getString("marketingCloudVisitorId"));
             }
         };
 
@@ -82,7 +82,7 @@ public class MarketingCloudMiddlewareTest {
         };
 
         middleware.intercept(chain);
-        Assert.assertEquals(visitorId, value.get().get("mcvid"));
+        Assert.assertEquals(visitorId, value.get().get("marketingCloudVisitorId"));
         Assert.assertEquals("option", value.get().get("option"));
     }
 
@@ -125,7 +125,7 @@ public class MarketingCloudMiddlewareTest {
             @Override
             public void proceed(BasePayload payload) {
                 System.out.println(payload.integrations().toJsonObject().toString());
-                value.complete(payload.integrations().getValueMap("Adobe Analytics").getString("mcvid"));
+                value.complete(payload.integrations().getValueMap("Adobe Analytics").getString("marketingCloudVisitorId"));
             }
         };
 

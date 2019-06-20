@@ -48,7 +48,7 @@ After adding the dependency, you must register the middleware with our SDK.  To 
 
 
 ```
-import com.segment.analytics.android.middlewares.mcvid.MCVIDMiddleware;
+import com.segment.analytics.android.middlewares.mcvid.MarketingCloudMiddleware;
 
 ```
 
