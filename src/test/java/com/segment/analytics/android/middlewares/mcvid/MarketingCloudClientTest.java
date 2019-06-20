@@ -124,7 +124,7 @@ public class MarketingCloudClientTest {
     @Test
     public void createVisitorIdUrl() {
 
-        String builtUrl = client.createUrl(Collections.EMPTY_MAP).toString();
+        String builtUrl = client.createUrl(new HashMap<String, String>()).toString();
         String expectedUrl = String.format("https://dpm.demdex.net/id?d_ver=2&dcs_region=%d&d_orgid=%s@AdobeOrg&d_rtbd=json", region, organizationId);
         Assert.assertEquals(expectedUrl, builtUrl);
 

@@ -11,7 +11,6 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -78,6 +77,7 @@ public interface MarketingCloudClient {
      */
     public class HttpClient implements MarketingCloudClient {
 
+        private final static Map<String, String> EMPTY_MAP = new HashMap<>();
         private final static String SCHEME = "https";
         private final static String HOST = "dpm.demdex.net";
         private final static String PATH = "id";
@@ -111,7 +111,7 @@ public interface MarketingCloudClient {
 
         @Override
         public String getVisitorID() throws MarketingCloudException, IOException {
-            URL url = createUrl(Collections.EMPTY_MAP);
+            URL url = createUrl(EMPTY_MAP);
             return sendRequest(url);
         }
 
