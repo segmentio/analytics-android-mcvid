@@ -1,6 +1,5 @@
 package com.segment.analytics.android.middlewares.mcvid;
 
-import android.app.Activity;
 import android.content.Context;
 
 import com.segment.analytics.Analytics;
@@ -27,7 +26,6 @@ import java.util.concurrent.Executors;
 @RunWith(RobolectricTestRunner.class)
 public class MarketingCloudMiddlewareTest {
 
-    @Mock private Activity activity;
     @Mock private Context context;
     @Mock private VisitorIdManager manager;
     @Mock private MarketingCloudClient client;
@@ -49,13 +47,13 @@ public class MarketingCloudMiddlewareTest {
 
     @Test
     public void getClient() {
-        MarketingCloudMiddleware middleware = new MarketingCloudMiddleware(activity, "organizationId", 3);
+        MarketingCloudMiddleware middleware = new MarketingCloudMiddleware(context, "organizationId", 3);
         Assert.assertNotNull(middleware.getClient());
     }
 
     @Test
     public void getClient_builder() {
-        MarketingCloudMiddleware middleware = new MarketingCloudMiddleware.Builder().withOrganizationId("organizationId").withRegion(3).withActivity(activity).build();
+        MarketingCloudMiddleware middleware = new MarketingCloudMiddleware.Builder().withOrganizationId("organizationId").withRegion(3).withContext(context).build();
         Assert.assertNotNull(middleware.getClient());
     }
 
@@ -162,7 +160,7 @@ public class MarketingCloudMiddlewareTest {
 
     @Test
     public void builder() {
-        new MarketingCloudMiddleware.Builder().withOrganizationId("organizationId").withRegion(3).withActivity(activity).build();
+        new MarketingCloudMiddleware.Builder().withOrganizationId("organizationId").withRegion(3).withContext(context).build();
     }
 
     @Test
@@ -172,22 +170,22 @@ public class MarketingCloudMiddlewareTest {
 
     @Test
     public void builder_client() {
-        new MarketingCloudMiddleware.Builder().withActivity(activity).withClient(client).build();
+        new MarketingCloudMiddleware.Builder().withContext(context).withClient(client).build();
     }
 
     @Test
     public void builder_executor() {
-        new MarketingCloudMiddleware.Builder().withActivity(activity).withClient(client).withExecutor(Executors.newSingleThreadScheduledExecutor()).build();
+        new MarketingCloudMiddleware.Builder().withContext(context).withClient(client).withExecutor(Executors.newSingleThreadScheduledExecutor()).build();
     }
 
     @Test
     public void builder_logger() {
-        new MarketingCloudMiddleware.Builder().withActivity(activity).withClient(client).withLogger(Logger.with(Analytics.LogLevel.INFO)).build();
+        new MarketingCloudMiddleware.Builder().withContext(context).withClient(client).withLogger(Logger.with(Analytics.LogLevel.INFO)).build();
     }
 
     @Test
     public void builder_store() {
-        new MarketingCloudMiddleware.Builder().withOrganizationId("organizationId").withRegion(3).withActivity(activity).withStore(store).build();
+        new MarketingCloudMiddleware.Builder().withOrganizationId("organizationId").withRegion(3).withContext(context).withStore(store).build();
     }
 
     @Test
@@ -197,22 +195,22 @@ public class MarketingCloudMiddlewareTest {
 
 
     @Test(expected = IllegalArgumentException.class)
-    public void builder_missingContext() {
+    public void builder_missingContextWithStore() {
         new MarketingCloudMiddleware.Builder().withOrganizationId("organizationId").withRegion(3).withStore(store).build();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void builder_missingOrganizationId() {
-        new MarketingCloudMiddleware.Builder().withRegion(3).withActivity(activity).build();
+        new MarketingCloudMiddleware.Builder().withRegion(3).withContext(context).build();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void builder_missingRegion() {
-        new MarketingCloudMiddleware.Builder().withOrganizationId("organizationId").withActivity(activity).build();
+        new MarketingCloudMiddleware.Builder().withOrganizationId("organizationId").withContext(context).build();
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void builder_missingActivity() {
+    public void builder_missingContext() {
         new MarketingCloudMiddleware.Builder().withOrganizationId("organizationId").withRegion(3).build();
     }
 }

@@ -57,7 +57,7 @@ And add the following line:
 ```
 analytics = new Analytics.Builder(this, "write_key")
                 ...
-                .middleware(new MarketingCloudMiddleware(this, "my organization ID", region))
+                .middleware(new MarketingCloudMiddleware(this.getApplicationContext(), "my organization ID", region))
                 .build();
 ```
 

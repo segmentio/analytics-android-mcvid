@@ -1,6 +1,5 @@
 package com.segment.analytics.android.middlewares.mcvid;
 
-import android.app.Activity;
 import android.content.Context;
 
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
@@ -54,13 +53,13 @@ public interface VisitorIdManager {
         /**
          * Creates the manager with the default parameters.
          *
-         * @param activity Main activity. Used to retrieve the preferences store and context.
+         * @param context Application context. Used to retrieve the advertising ID.
          * @param executor Executor where the different calls are going to be executed.
          * @param client Marketing Cloud client to retrieve the Visitor ID and sync advertising ID.
          * @param logger Logger.
          */
-        public AsyncVisitorIdManager(Activity activity, ScheduledExecutorService executor, MarketingCloudClient client, Logger logger) {
-            this(activity.getApplicationContext(), executor, client, new VisitorIdStore.SharedPreferencesStore(activity), logger);
+        public AsyncVisitorIdManager(Context context, ScheduledExecutorService executor, MarketingCloudClient client, Logger logger) {
+            this(context, executor, client, new VisitorIdStore.SharedPreferencesStore(context), logger);
         }
 
         /**

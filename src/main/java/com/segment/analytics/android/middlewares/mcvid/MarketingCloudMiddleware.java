@@ -1,6 +1,5 @@
 package com.segment.analytics.android.middlewares.mcvid;
 
-import android.app.Activity;
 import android.content.Context;
 
 import com.segment.analytics.Analytics;
@@ -30,13 +29,13 @@ public class MarketingCloudMiddleware implements Middleware {
     /**
      * Constructs the middleware with the default configuration and implementation.
      *
-     * @param activity Android activity.
+     * @param context Application context.
      * @param organizationId Adobe Organization ID (ex. 11AABBBC67777F0000FFF)
      * @param region Datacenter region (ex. 3)
      */
-    public MarketingCloudMiddleware(Activity activity, String organizationId, int region) {
+    public MarketingCloudMiddleware(Context context, String organizationId, int region) {
         client = new MarketingCloudClient.HttpClient(organizationId, region);
-        manager = new VisitorIdManager.AsyncVisitorIdManager(activity, Executors.newSingleThreadScheduledExecutor(), client, Logger.with(Analytics.LogLevel.INFO));
+        manager = new VisitorIdManager.AsyncVisitorIdManager(context, Executors.newSingleThreadScheduledExecutor(), client, Logger.with(Analytics.LogLevel.INFO));
     }
 
     /**
@@ -120,7 +119,6 @@ public class MarketingCloudMiddleware implements Middleware {
 
         private String organizationId;
         private int region;
-        private Activity activity;
         private Context context;
         private MarketingCloudClient client;
         private ScheduledExecutorService executor;
@@ -153,17 +151,14 @@ public class MarketingCloudMiddleware implements Middleware {
             }
 
             if (store == null) {
-                if (activity == null) {
-                    throw new IllegalArgumentException("Either Activity or the Store implementation is required");
+                if (context == null) {
+                    throw new IllegalArgumentException("Either Context or the Store implementation is required");
                 }
-                store = new VisitorIdStore.SharedPreferencesStore(activity);
+                store = new VisitorIdStore.SharedPreferencesStore(context);
             }
 
             if (context == null) {
-                if (activity == null) {
-                    throw new IllegalArgumentException("Either Activity or Context is required");
-                }
-                context = activity.getApplicationContext();
+                throw new IllegalArgumentException("Either Context or Manager implementation is required");
             }
 
             if (executor == null) {
@@ -217,19 +212,7 @@ public class MarketingCloudMiddleware implements Middleware {
         }
 
         /**
-         * Sets the activity. This call is required unless you use a custom store.
-         *
-         * @param activity Android activity.
-         * @return The builder instance.
-         */
-        public Builder withActivity(Activity activity) {
-            assertArgument("activity", activity);
-            this.activity = activity;
-            return this;
-        }
-
-        /**
-         * Sets the context. This is not required if the activity has been set.
+         * Sets the context.
          *
          * @param context Context.
          * @return The builder instance.
