@@ -11,7 +11,6 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,12 +31,13 @@ public interface MarketingCloudClient {
     /**
      * Performs an ID sync between the provided Visitor ID and other customer ID.
      * @param visitorId Marketing Cloud Visitor ID (generated with the method above).
+     * @param integrationCode Code associated with the integration (ex. Android: DSID_20914)
      * @param customerId Other user/device ID (advertisingId, userId, etc).
      *
      * @throws MarketingCloudException if the response from the service is unexpected
      * @throws IOException if an I/O exception occurs
      */
-    public void idSync(String visitorId, String customerId) throws MarketingCloudException, IOException;
+    public void idSync(String visitorId, String integrationCode, String customerId) throws MarketingCloudException, IOException;
 
     /**
      * Represents any unexpected response from the Marketing Cloud service. Usually anything that is not a 200
@@ -77,6 +77,7 @@ public interface MarketingCloudClient {
      */
     public class HttpClient implements MarketingCloudClient {
 
+        private final static Map<String, String> EMPTY_MAP = new HashMap<>();
         private final static String SCHEME = "https";
         private final static String HOST = "dpm.demdex.net";
         private final static String PATH = "id";
@@ -110,15 +111,15 @@ public interface MarketingCloudClient {
 
         @Override
         public String getVisitorID() throws MarketingCloudException, IOException {
-            URL url = createUrl(Collections.EMPTY_MAP);
+            URL url = createUrl(EMPTY_MAP);
             return sendRequest(url);
         }
 
         @Override
-        public void idSync(String visitorId, String customerId) throws MarketingCloudException, IOException {
+        public void idSync(String visitorId, String integrationCode, String customerId) throws MarketingCloudException, IOException {
             Map<String, String> parameters = new HashMap<>();
             parameters.put(VID_FIELD, visitorId);
-            parameters.put(CUSTOMER_ID_FIELD, customerId);
+            parameters.put(CUSTOMER_ID_FIELD, String.format("%s%%01%s", integrationCode, customerId));
 
             URL url = createUrl(parameters);
             sendRequest(url);

@@ -1,6 +1,5 @@
 package com.segment.analytics.android.middlewares.mcvid;
 
-import android.app.Activity;
 import android.content.Context;
 
 import com.segment.analytics.Analytics;
@@ -11,7 +10,6 @@ import com.segment.analytics.integrations.Logger;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -23,7 +21,7 @@ public class MarketingCloudMiddleware implements Middleware {
 
     private final static String INTEGRATIONS_KEY = "integrations";
     private final static String ADOBE_ANALYTICS_KEY = "Adobe Analytics";
-    private final static String MCVID_KEY = "mcvid";
+    private final static String MCVID_KEY = "marketingCloudVisitorId";
 
     private VisitorIdManager manager;
     private MarketingCloudClient client;
@@ -31,13 +29,13 @@ public class MarketingCloudMiddleware implements Middleware {
     /**
      * Constructs the middleware with the default configuration and implementation.
      *
-     * @param activity Android activity.
+     * @param context Application context.
      * @param organizationId Adobe Organization ID (ex. 11AABBBC67777F0000FFF)
      * @param region Datacenter region (ex. 3)
      */
-    public MarketingCloudMiddleware(Activity activity, String organizationId, int region) {
+    public MarketingCloudMiddleware(Context context, String organizationId, int region) {
         client = new MarketingCloudClient.HttpClient(organizationId, region);
-        manager = new VisitorIdManager.AsyncVisitorIdManager(activity, Executors.newSingleThreadScheduledExecutor(), client, Logger.with(Analytics.LogLevel.INFO));
+        manager = new VisitorIdManager.AsyncVisitorIdManager(context, Executors.newSingleThreadScheduledExecutor(), client, Logger.with(Analytics.LogLevel.INFO));
     }
 
     /**
@@ -97,12 +95,21 @@ public class MarketingCloudMiddleware implements Middleware {
     }
 
     /**
-     * Retrieves the Marketing Cloud client.
+     * Retrieves the Marketing Cloud client. Only available when using the default Visitor Id Manager.
      *
-     * @return The client. Returns null if the client is not the default one.
+     * @return The client.
      */
     public MarketingCloudClient getClient() {
         return client;
+    }
+
+    /**
+     * Retrieves the visitor ID. Useful to make your own id syncs.
+     *
+     * @return Visitor Id if available, null otherwise.
+     */
+    public String getVisitorId() {
+        return manager.getVisitorId();
     }
 
     /**
@@ -112,7 +119,6 @@ public class MarketingCloudMiddleware implements Middleware {
 
         private String organizationId;
         private int region;
-        private Activity activity;
         private Context context;
         private MarketingCloudClient client;
         private ScheduledExecutorService executor;
@@ -120,10 +126,7 @@ public class MarketingCloudMiddleware implements Middleware {
         private VisitorIdManager manager;
         private Logger logger;
 
-        public Builder() {
-            logger = Logger.with(Analytics.LogLevel.INFO);
-            executor = Executors.newSingleThreadScheduledExecutor();
-        }
+        public Builder() {}
 
         /**
          * Builds the instance.
@@ -136,6 +139,10 @@ public class MarketingCloudMiddleware implements Middleware {
                 return new MarketingCloudMiddleware(manager);
             }
 
+            if (logger == null) {
+                logger = Logger.with(Analytics.LogLevel.INFO);
+            }
+
             if (client == null) {
                 if (organizationId == null || region == 0) {
                     throw new IllegalArgumentException("Adobe Organization Id and Region are required");
@@ -144,21 +151,25 @@ public class MarketingCloudMiddleware implements Middleware {
             }
 
             if (store == null) {
-                if (activity == null) {
-                    throw new IllegalArgumentException("Either Activity or the Store implementation is required");
+                if (context == null) {
+                    throw new IllegalArgumentException("Either Context or the Store implementation is required");
                 }
-                store = new VisitorIdStore.SharedPreferencesStore(activity);
+                store = new VisitorIdStore.SharedPreferencesStore(context);
             }
 
             if (context == null) {
-                if (activity == null) {
-                    throw new IllegalArgumentException("Either Activity or Context is required");
-                }
-                context = activity.getApplicationContext();
+                throw new IllegalArgumentException("Either Context or Manager implementation is required");
+            }
+
+            if (executor == null) {
+                executor = Executors.newSingleThreadScheduledExecutor();
             }
 
             manager = new VisitorIdManager.AsyncVisitorIdManager(context, executor, client, store, logger);
-            return new MarketingCloudMiddleware(manager);
+
+            MarketingCloudMiddleware middleware = new MarketingCloudMiddleware(manager);
+            middleware.client = client;
+            return middleware;
         }
 
 
@@ -201,19 +212,7 @@ public class MarketingCloudMiddleware implements Middleware {
         }
 
         /**
-         * Sets the activity. This call is required unless you use a custom store.
-         *
-         * @param activity Android activity.
-         * @return The builder instance.
-         */
-        public Builder withActivity(Activity activity) {
-            assertArgument("activity", activity);
-            this.activity = activity;
-            return this;
-        }
-
-        /**
-         * Sets the context. This is not required if the activity has been set.
+         * Sets the context.
          *
          * @param context Context.
          * @return The builder instance.
@@ -251,7 +250,8 @@ public class MarketingCloudMiddleware implements Middleware {
 
         /**
          * Allows to use a custom implementation of the manager. If this method is called, the
-         * others in this builder have no effect.
+         * others in this builder have no effect. Also, the middleware won't have access to the client
+         * directly (middleware.getClient() will return always null).
          *
          * @param manager Custom visitor ID Manager.
          * @return The builder instance.

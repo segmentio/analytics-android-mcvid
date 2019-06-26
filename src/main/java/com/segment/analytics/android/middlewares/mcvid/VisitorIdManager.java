@@ -1,6 +1,5 @@
 package com.segment.analytics.android.middlewares.mcvid;
 
-import android.app.Activity;
 import android.content.Context;
 
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
@@ -35,6 +34,8 @@ public interface VisitorIdManager {
      */
     public class AsyncVisitorIdManager implements VisitorIdManager {
 
+        private final static String ANDROID_INTEGRATION_CODE = "DSID_20914";
+
         static int MAX_RETRIES = 10;
         static boolean AUTOSTART = true;
 
@@ -52,13 +53,13 @@ public interface VisitorIdManager {
         /**
          * Creates the manager with the default parameters.
          *
-         * @param activity Main activity. Used to retrieve the preferences store and context.
+         * @param context Application context. Used to retrieve the advertising ID.
          * @param executor Executor where the different calls are going to be executed.
          * @param client Marketing Cloud client to retrieve the Visitor ID and sync advertising ID.
          * @param logger Logger.
          */
-        public AsyncVisitorIdManager(Activity activity, ScheduledExecutorService executor, MarketingCloudClient client, Logger logger) {
-            this(activity.getApplicationContext(), executor, client, new VisitorIdStore.SharedPreferencesStore(activity), logger);
+        public AsyncVisitorIdManager(Context context, ScheduledExecutorService executor, MarketingCloudClient client, Logger logger) {
+            this(context, executor, client, new VisitorIdStore.SharedPreferencesStore(context), logger);
         }
 
         /**
@@ -175,7 +176,7 @@ public interface VisitorIdManager {
                     }
 
                     try {
-                        client.idSync(visitorId, advertisingId);
+                        client.idSync(visitorId, ANDROID_INTEGRATION_CODE, advertisingId);
                     } catch (MarketingCloudClient.MarketingCloudException e) {
                         handleError("Error syncing visitor ID and advertising ID: %s", e);
                         if (e.isBadInput()) {

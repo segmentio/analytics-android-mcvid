@@ -1,6 +1,5 @@
 package com.segment.analytics.android.middlewares.mcvid;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 
@@ -53,29 +52,19 @@ public interface VisitorIdStore {
 
         private final static String DEFAULT_VALUE = "";
         private final static String DEFAULT_KEY = "mcvid";
+        private final static String DEFAULT_SHARED_PREFERENCES = "mcvid";
 
         private String key;
         private String advertisingIdKey;
         private SharedPreferences preferences;
 
         /**
-         * Creates a new store using the activity's main preferences with Context.MODE_PRIVATE.
+         * Creates a new store using the provided preferences.
          *
-         * @param activity Main activity.
+         * @param context Application context to retrieve the shared preferences.
          */
-        public SharedPreferencesStore(Activity activity) {
-            this(activity.getPreferences(Context.MODE_PRIVATE), DEFAULT_KEY);
-        }
-
-        /**
-         * Creates a new store using the key to store the value. It uses the activity's main
-         * preferences with Context.MODE_PRIVATE
-         *
-         * @param activity Main activity.
-         * @param key Key to store the Visitor ID.
-         */
-        public SharedPreferencesStore(Activity activity, String key) {
-            this(activity.getPreferences(Context.MODE_PRIVATE), key);
+        public SharedPreferencesStore(Context context) {
+            this(context.getSharedPreferences(DEFAULT_SHARED_PREFERENCES, Context.MODE_PRIVATE), DEFAULT_KEY);
         }
 
         /**

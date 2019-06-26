@@ -132,7 +132,6 @@ public class VisitorIdManagerTest {
 
     @Test
     public void getVisitorId_exception() throws MarketingCloudClient.MarketingCloudException, IOException {
-        String visitorId = "visitorId";
         Mockito.when(client.getVisitorID()).thenThrow(new MarketingCloudClient.MarketingCloudException("Error!!!!"));
 
         VisitorIdManager.AsyncVisitorIdManager manager = new VisitorIdManager.AsyncVisitorIdManager(context, executor, client, store, logger);
@@ -226,7 +225,7 @@ public class VisitorIdManagerTest {
         String visitorId = "visitorId";
         String advertisingId = "advertisingId";
         Mockito.when(client.getVisitorID()).thenReturn(visitorId);
-        Mockito.doThrow(new MarketingCloudClient.MarketingCloudException("Error!")).when(client).idSync(visitorId, advertisingId);
+        Mockito.doThrow(new MarketingCloudClient.MarketingCloudException("Error!")).when(client).idSync(visitorId, "DSID_20914", advertisingId);
         Mockito.when(store.getSyncedAdvertisingId()).thenReturn(advertisingId);
 
 

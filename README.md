@@ -28,7 +28,7 @@ You will need to provide some parameters to make the tests work end to end:
 ```
 export TEST_ADOBE_ORGANIZATION_ID="myTestOrganizationId";
 export TEST_ADOBE_REGION="3";
-export TEST_ADOBE_CUSTOMER_ID="DSID_20914%01myTestCustomerId"
+export TEST_ADOBE_CUSTOMER_ID="myTestCustomerId"
 ```
 
 Then use gradle to run the tests:
@@ -48,7 +48,7 @@ After adding the dependency, you must register the middleware with our SDK.  To 
 
 
 ```
-import com.segment.analytics.android.middlewares.mcvid.MCVIDMiddleware;
+import com.segment.analytics.android.middlewares.mcvid.MarketingCloudMiddleware;
 
 ```
 
@@ -57,7 +57,7 @@ And add the following line:
 ```
 analytics = new Analytics.Builder(this, "write_key")
                 ...
-                .middleware(new MarketingCloudMiddleware(this, "my organization ID", region))
+                .middleware(new MarketingCloudMiddleware(this.getApplicationContext(), "my organization ID", region))
                 .build();
 ```
 
@@ -68,6 +68,9 @@ analytics = new Analytics.Builder(this, "write_key")
                 ...
                 .middleware(mcvid)
                 .build();
+
+// If you need to sync any other ID, you can use the middleware's client directly.
+mcvid.getClient().idSync(mcvid.getVisitorId(), "MYAPP", "customerId");
 ```
 
 
