@@ -17,14 +17,13 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 @RunWith(RobolectricTestRunner.class)
 public class MarketingCloudClientTest {
 
-    private final String DEFAULT_TEST_ORGANIZATION_ID = "organizationId";
+    private final String DEFAULT_TEST_ORGANIZATION_ID = "organizationId@AdobeOrg";
     private final String DEFAULT_TEST_REGION = "3";
     private final String DEFAULT_INTEGRATION_CODE = "DSID_20914";
     private final String DEFAULT_CUSTOMER_ID = "customerId";
@@ -63,7 +62,7 @@ public class MarketingCloudClientTest {
     @Test
     public void idSync() throws MarketingCloudClient.MarketingCloudException, IOException {
         String visitorId = client.getVisitorID();
-        final String expectedUrl = String.format("https://dpm.demdex.net/id?d_mid=%s&d_ver=2&dcs_region=%d&d_orgid=%s@AdobeOrg&d_rtbd=json&d_cid_ic=%s%%01%s", visitorId, region, organizationId, DEFAULT_INTEGRATION_CODE, customerId);
+        final String expectedUrl = String.format("https://dpm.demdex.net/id?d_mid=%s&d_ver=2&dcs_region=%d&d_orgid=%s&d_rtbd=json&d_cid_ic=%s%%01%s", visitorId, region, organizationId, DEFAULT_INTEGRATION_CODE, customerId);
 
         MarketingCloudClient.HttpClient spy = Mockito.spy(client);
         spy.idSync(visitorId, DEFAULT_INTEGRATION_CODE, customerId);
@@ -125,14 +124,14 @@ public class MarketingCloudClientTest {
     public void createVisitorIdUrl() {
 
         String builtUrl = client.createUrl(new HashMap<String, String>()).toString();
-        String expectedUrl = String.format("https://dpm.demdex.net/id?d_ver=2&dcs_region=%d&d_orgid=%s@AdobeOrg&d_rtbd=json", region, organizationId);
+        String expectedUrl = String.format("https://dpm.demdex.net/id?d_ver=2&dcs_region=%d&d_orgid=%s&d_rtbd=json", region, organizationId);
         Assert.assertEquals(expectedUrl, builtUrl);
 
         Uri uri = Uri.parse(builtUrl);
         Assert.assertEquals("https", uri.getScheme());
         Assert.assertEquals("dpm.demdex.net", uri.getAuthority());
         Assert.assertEquals("/id", uri.getPath());
-        String expectedQuery = String.format("d_ver=2&dcs_region=%d&d_orgid=%s@AdobeOrg&d_rtbd=json", region, organizationId);
+        String expectedQuery = String.format("d_ver=2&dcs_region=%d&d_orgid=%s&d_rtbd=json", region, organizationId);
         Assert.assertEquals(expectedQuery, uri.getEncodedQuery());
     }
 
@@ -144,14 +143,14 @@ public class MarketingCloudClientTest {
         parameters.put("d_cid_ic", customerId);
 
         String builtUrl = client.createUrl(parameters).toString();
-        String expectedUrl = String.format("https://dpm.demdex.net/id?d_mid=visitorId&d_ver=2&dcs_region=%d&d_orgid=%s@AdobeOrg&d_rtbd=json&d_cid_ic=%s", region, organizationId, customerId);
+        String expectedUrl = String.format("https://dpm.demdex.net/id?d_mid=visitorId&d_ver=2&dcs_region=%d&d_orgid=%s&d_rtbd=json&d_cid_ic=%s", region, organizationId, customerId);
         Assert.assertEquals(expectedUrl, builtUrl);
 
         Uri uri = Uri.parse(builtUrl);
         Assert.assertEquals("https", uri.getScheme());
         Assert.assertEquals("dpm.demdex.net", uri.getAuthority());
         Assert.assertEquals("/id", uri.getPath());
-        String expectedQuery = String.format("d_mid=visitorId&d_ver=2&dcs_region=%d&d_orgid=%s@AdobeOrg&d_rtbd=json&d_cid_ic=%s", region, organizationId, customerId);
+        String expectedQuery = String.format("d_mid=visitorId&d_ver=2&dcs_region=%d&d_orgid=%s&d_rtbd=json&d_cid_ic=%s", region, organizationId, customerId);
         Assert.assertEquals(expectedQuery, uri.getEncodedQuery());
     }
 
