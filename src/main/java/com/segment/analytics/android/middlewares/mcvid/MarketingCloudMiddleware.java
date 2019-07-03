@@ -30,7 +30,7 @@ public class MarketingCloudMiddleware implements Middleware {
      * Constructs the middleware with the default configuration and implementation.
      *
      * @param context Application context.
-     * @param organizationId Adobe Organization ID (ex. 11AABBBC67777F0000FFF)
+     * @param organizationId Adobe Organization ID (ex. 11AABBBC67777F0000FFF@AdobeOrg)
      * @param region Datacenter region (ex. 3)
      */
     public MarketingCloudMiddleware(Context context, String organizationId, int region) {
@@ -176,7 +176,7 @@ public class MarketingCloudMiddleware implements Middleware {
         /**
          * Sets the Adobe organization Id. This value is provided by Adobe.
          *
-         * @param organizationId Adobe Organization Id.
+         * @param organizationId Adobe Organization Id. (ex. 11AABBBC67777F0000FFF@AdobeOrg)
          * @return The builder instance.
          */
         public Builder withOrganizationId(String organizationId) {

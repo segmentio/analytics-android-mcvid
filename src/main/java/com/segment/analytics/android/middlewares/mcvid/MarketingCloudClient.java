@@ -83,7 +83,6 @@ public interface MarketingCloudClient {
         private final static String PATH = "id";
         private final static String FORMAT = "json";
         private final static int VERSION = 2;
-        private final static String ORGANIZATION_SUFFIX = "@AdobeOrg";
         private final static String VID_FIELD = "d_mid";
         private final static String ERRORS_FIELD = "errors";
         private final static String ERROR_MSG_FIELD = "msg";
@@ -101,7 +100,7 @@ public interface MarketingCloudClient {
 
         /**
          * Constructor.
-         * @param organizationId Organization ID provided by Adobe.
+         * @param organizationId Organization ID provided by Adobe. (ex. 11AABBBC67777F0000FFF@AdobeOrg)
          * @param region Data Center region.
          */
         public HttpClient(String organizationId, int region) {
@@ -176,7 +175,7 @@ public interface MarketingCloudClient {
             queryParameters.put(VERSION_FIELD, Integer.toString(VERSION));
             queryParameters.put(REGION_FIELD, Integer.toString(region));
             queryParameters.put(FORMAT_FIELD, FORMAT);
-            queryParameters.put(ORGANIZATION_FIELD, organizationId + ORGANIZATION_SUFFIX);
+            queryParameters.put(ORGANIZATION_FIELD, organizationId);
             queryParameters.putAll(encodedQueryParameters);
 
             // Manual query building
