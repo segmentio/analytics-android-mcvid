@@ -2,6 +2,7 @@ package com.segment.analytics.android.middlewares.mcvid;
 
 import android.net.Uri;
 
+import java.util.ArrayList;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,21 +64,27 @@ public class MarketingCloudClientTest {
     public void idSync() throws MarketingCloudClient.MarketingCloudException, IOException {
         String visitorId = client.getVisitorID();
         final String expectedUrl = String.format("https://dpm.demdex.net/id?d_mid=%s&d_ver=2&dcs_region=%d&d_orgid=%s&d_rtbd=json&d_cid_ic=%s%%01%s", visitorId, region, organizationId, DEFAULT_INTEGRATION_CODE, customerId);
+        final Map<MCVIDAuthState, String> expectedUrlsWithAuthState = new HashMap<>();
+        expectedUrlsWithAuthState.put(MCVIDAuthState.MCVIDAuthStateUnknown, expectedUrl + "%01" + MCVIDAuthState.MCVIDAuthStateUnknown.getState());
+        expectedUrlsWithAuthState.put(MCVIDAuthState.MCVIDAuthStateAuthenticated, expectedUrl + "%01" + MCVIDAuthState.MCVIDAuthStateAuthenticated.getState());
+        expectedUrlsWithAuthState.put(MCVIDAuthState.MCVIDAuthStateLoggedOut, expectedUrl + "%01" + MCVIDAuthState.MCVIDAuthStateLoggedOut.getState());
 
         MarketingCloudClient.HttpClient spy = Mockito.spy(client);
-        spy.idSync(visitorId, DEFAULT_INTEGRATION_CODE, customerId);
-        Mockito.verify(spy, Mockito.times(1)).sendRequest(Mockito.argThat(new ArgumentMatcher<URL>() {
-            @Override
-            public boolean matches(URL argument) {
-                return expectedUrl.equals(argument.toString());
-            }
-        }));
+        for (final MCVIDAuthState authState : expectedUrlsWithAuthState.keySet()) {
+            spy.idSync(visitorId, DEFAULT_INTEGRATION_CODE, customerId, authState);
+            Mockito.verify(spy, Mockito.times(1)).sendRequest(Mockito.argThat(new ArgumentMatcher<URL>() {
+                @Override
+                public boolean matches(URL argument) {
+                    return expectedUrlsWithAuthState.get(authState).equals(argument.toString());
+                }
+            }));
+        }
     }
 
     @Test(expected = MarketingCloudClient.MarketingCloudException.class)
     public void idSync_invalidVisitorId() throws MarketingCloudClient.MarketingCloudException, IOException {
         String vid = "this is invalid big time";
-        client.idSync(vid, DEFAULT_INTEGRATION_CODE, customerId);
+        client.idSync(vid, DEFAULT_INTEGRATION_CODE, customerId, MCVIDAuthState.MCVIDAuthStateUnknown);
     }
 
     @Test
@@ -122,7 +129,6 @@ public class MarketingCloudClientTest {
 
     @Test
     public void createVisitorIdUrl() {
-
         String builtUrl = client.createUrl(new HashMap<String, String>()).toString();
         String expectedUrl = String.format("https://dpm.demdex.net/id?d_ver=2&dcs_region=%d&d_orgid=%s&d_rtbd=json", region, organizationId);
         Assert.assertEquals(expectedUrl, builtUrl);
@@ -137,20 +143,21 @@ public class MarketingCloudClientTest {
 
     @Test
     public void idSyncUrl() {
-
         Map<String, String> parameters = new HashMap<>();
         parameters.put("d_mid", "visitorId");
-        parameters.put("d_cid_ic", customerId);
+        parameters.put("d_cid_ic", customerId + "%01" + MCVIDAuthState.MCVIDAuthStateUnknown.getState());
 
         String builtUrl = client.createUrl(parameters).toString();
-        String expectedUrl = String.format("https://dpm.demdex.net/id?d_mid=visitorId&d_ver=2&dcs_region=%d&d_orgid=%s&d_rtbd=json&d_cid_ic=%s", region, organizationId, customerId);
+        String expectedUrl = String.format("https://dpm.demdex.net/id?d_mid=visitorId&d_ver=2&dcs_region=%d&d_orgid=%s&d_rtbd=json&d_cid_ic=%s%%01%d", region, organizationId, customerId,
+            MCVIDAuthState.MCVIDAuthStateUnknown.getState());
         Assert.assertEquals(expectedUrl, builtUrl);
 
         Uri uri = Uri.parse(builtUrl);
         Assert.assertEquals("https", uri.getScheme());
         Assert.assertEquals("dpm.demdex.net", uri.getAuthority());
         Assert.assertEquals("/id", uri.getPath());
-        String expectedQuery = String.format("d_mid=visitorId&d_ver=2&dcs_region=%d&d_orgid=%s&d_rtbd=json&d_cid_ic=%s", region, organizationId, customerId);
+        String expectedQuery = String.format("d_mid=visitorId&d_ver=2&dcs_region=%d&d_orgid=%s&d_rtbd=json&d_cid_ic=%s%%01%d", region, organizationId, customerId,
+            MCVIDAuthState.MCVIDAuthStateUnknown.getState());
         Assert.assertEquals(expectedQuery, uri.getEncodedQuery());
     }
 

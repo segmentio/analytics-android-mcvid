@@ -12,6 +12,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -37,7 +38,8 @@ public interface MarketingCloudClient {
      * @throws MarketingCloudException if the response from the service is unexpected
      * @throws IOException if an I/O exception occurs
      */
-    public void idSync(String visitorId, String integrationCode, String customerId) throws MarketingCloudException, IOException;
+    public void idSync(String visitorId, String integrationCode, String customerId, MCVIDAuthState authentication)
+        throws MarketingCloudException, IOException;
 
     /**
      * Represents any unexpected response from the Marketing Cloud service. Usually anything that is not a 200
@@ -94,6 +96,7 @@ public interface MarketingCloudClient {
         private final static String CUSTOMER_ID_FIELD = "d_cid_ic";
         private final static String CHARSET = "UTF-8";
         private final static String RESPONSE_CHARSET = "application/json;charset=utf-8";
+        private static final String SEPARATOR = "%%01";
 
         private String organizationId;
         private int region;
@@ -115,10 +118,12 @@ public interface MarketingCloudClient {
         }
 
         @Override
-        public void idSync(String visitorId, String integrationCode, String customerId) throws MarketingCloudException, IOException {
+        public void idSync(String visitorId, String integrationCode, String customerId, MCVIDAuthState authentication)
+            throws MarketingCloudException, IOException {
             Map<String, String> parameters = new HashMap<>();
             parameters.put(VID_FIELD, visitorId);
-            parameters.put(CUSTOMER_ID_FIELD, String.format("%s%%01%s", integrationCode, customerId));
+            parameters.put(CUSTOMER_ID_FIELD, String.format(Locale.US, "%s" + SEPARATOR + "%s" + SEPARATOR + "%d",
+                integrationCode, customerId, authentication.getState()));
 
             URL url = createUrl(parameters);
             sendRequest(url);
