@@ -1,4 +1,9 @@
 
+0.0.4 / 2020-10-10
+==================
+
+  * Add an additional parameter to syncIntegrationCode to define the authentication state of the user.
+
 0.0.3 / 2019-07-03
 ==================
 
