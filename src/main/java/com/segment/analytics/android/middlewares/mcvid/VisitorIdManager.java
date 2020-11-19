@@ -176,8 +176,7 @@ public interface VisitorIdManager {
                     }
 
                     try {
-                        // According to Adobe, Unknown is applied by default when AuthState is not used with a visitor ID or not explicitly set on each page or app context.
-                        client.idSync(visitorId, ANDROID_INTEGRATION_CODE, advertisingId, MCVIDAuthState.MCVIDAuthStateUnknown);
+                        client.idSync(visitorId, ANDROID_INTEGRATION_CODE, advertisingId);
                     } catch (MarketingCloudClient.MarketingCloudException e) {
                         handleError("Error syncing visitor ID and advertising ID: %s", e);
                         if (e.isBadInput()) {
