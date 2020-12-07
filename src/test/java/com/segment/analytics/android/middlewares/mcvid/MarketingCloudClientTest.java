@@ -23,7 +23,7 @@ import java.util.Map;
 @RunWith(RobolectricTestRunner.class)
 public class MarketingCloudClientTest {
 
-    private final String DEFAULT_TEST_ORGANIZATION_ID = "B3CB46FC57C6C8F77F000101@AdobeOrg";
+    private final String DEFAULT_TEST_ORGANIZATION_ID = "B3CB46FC57C6C8F77F000101";
     private final String DEFAULT_TEST_REGION = "3";
     private final String DEFAULT_INTEGRATION_CODE = "DSID_20914";
     private final String DEFAULT_CUSTOMER_ID = "customerId";
@@ -42,10 +42,10 @@ public class MarketingCloudClientTest {
 
         String regionVar = DEFAULT_TEST_REGION;
         if (regionVar != null && !regionVar.equals("")) {
-            region = Integer.parseInt(regionVar);
+            this.region = Integer.parseInt(regionVar);
         }
 
-        client = new MarketingCloudClient.HttpClient(this.organizationId, region);
+        this.client = new MarketingCloudClient.HttpClient(this.organizationId, this.region);
     }
 
     @Test
