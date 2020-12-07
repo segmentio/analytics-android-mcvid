@@ -2,7 +2,6 @@ package com.segment.analytics.android.middlewares.mcvid;
 
 import android.net.Uri;
 
-import java.util.ArrayList;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,7 +23,7 @@ import java.util.Map;
 @RunWith(RobolectricTestRunner.class)
 public class MarketingCloudClientTest {
 
-    private final String DEFAULT_TEST_ORGANIZATION_ID = "organizationId@AdobeOrg";
+    private final String DEFAULT_TEST_ORGANIZATION_ID = "B3CB46FC57C6C8F77F000101@AdobeOrg";
     private final String DEFAULT_TEST_REGION = "3";
     private final String DEFAULT_INTEGRATION_CODE = "DSID_20914";
     private final String DEFAULT_CUSTOMER_ID = "customerId";
