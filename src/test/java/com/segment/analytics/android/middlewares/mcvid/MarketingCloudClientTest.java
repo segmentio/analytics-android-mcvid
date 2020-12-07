@@ -37,15 +37,15 @@ public class MarketingCloudClientTest {
     @Before
     public void initialize() {
 
-        organizationId = System.getProperty("test.adobe.organization_id", DEFAULT_TEST_ORGANIZATION_ID);
-        customerId = System.getProperty("test.adobe.customer_id", DEFAULT_CUSTOMER_ID);
+        this.organizationId = DEFAULT_TEST_ORGANIZATION_ID;
+        this.customerId = DEFAULT_CUSTOMER_ID;
 
-        String regionVar = System.getProperty("test.adobe.region", DEFAULT_TEST_REGION);
+        String regionVar = DEFAULT_TEST_REGION;
         if (regionVar != null && !regionVar.equals("")) {
             region = Integer.parseInt(regionVar);
         }
 
-        client = new MarketingCloudClient.HttpClient(organizationId, region);
+        client = new MarketingCloudClient.HttpClient(this.organizationId, region);
     }
 
     @Test
