@@ -50,7 +50,7 @@ public class MarketingCloudClientTest {
 
     @Test
     public void createVisitor() throws MarketingCloudClient.MarketingCloudException, IOException {
-        client.getVisitorID();
+        this.client.getVisitorID();
     }
 
     @Test(expected = MarketingCloudClient.MarketingCloudException.class)
