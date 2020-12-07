@@ -26,7 +26,7 @@ public class MarketingCloudClientTest {
     private final String DEFAULT_TEST_ORGANIZATION_ID = "B3CB46FC57C6C8F77F000101";
     private final String DEFAULT_TEST_REGION = "9";
     private final String DEFAULT_INTEGRATION_CODE = "DSID_20914";
-    private final String DEFAULT_CUSTOMER_ID = "8934";
+    private final String DEFAULT_CUSTOMER_ID = "jnasfnvasdfkjvneaniles";
 
     private int region;
     private String organizationId;
