@@ -45,12 +45,12 @@ public class MarketingCloudClientTest {
             region = Integer.parseInt(regionVar);
         }
 
-        this.client = new MarketingCloudClient.HttpClient(this.organizationId, this.region);
+        client = new MarketingCloudClient.HttpClient(this.organizationId, this.region);
     }
 
     @Test
     public void createVisitor() throws MarketingCloudClient.MarketingCloudException, IOException {
-        this.client.getVisitorID();
+        client.getVisitorID();
     }
 
     @Test(expected = MarketingCloudClient.MarketingCloudException.class)
