@@ -66,12 +66,12 @@ android {
     testOptions {
         unitTests {
             includeAndroidResources = true
-//
-//            all {
-//                systemProperty 'test.adobe.organization_id', System.getenv('TEST_ADOBE_ORGANIZATION_ID')
-//                systemProperty 'test.adobe.customer_id', System.getenv('TEST_ADOBE_CUSTOMER_ID')
-//                systemProperty 'test.adobe.region', System.getenv('TEST_ADOBE_REGION')
-//            }
+
+            all {
+                systemProperty 'test.adobe.organization_id', 'B3CB46FC57C6C8F77F000101@AdobeOrg'
+                systemProperty 'test.adobe.customer_id', 'jnasfnvasdfkjvneaniles'
+                systemProperty 'test.adobe.region', '9'
+            }
         }
     }
 }
