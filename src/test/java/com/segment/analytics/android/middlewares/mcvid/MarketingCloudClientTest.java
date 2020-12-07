@@ -45,12 +45,12 @@ public class MarketingCloudClientTest {
             region = Integer.parseInt(regionVar);
         }
 
-        client = new MarketingCloudClient.HttpClient(this.organizationId, this.region);
+        this.client = new MarketingCloudClient.HttpClient(this.organizationId, this.region);
     }
 
     @Test
     public void createVisitor() throws MarketingCloudClient.MarketingCloudException, IOException {
-        client.getVisitorID();
+        this.client.getVisitorID();
     }
 
     @Test(expected = MarketingCloudClient.MarketingCloudException.class)
@@ -61,7 +61,7 @@ public class MarketingCloudClientTest {
 
     @Test
     public void idSync() throws MarketingCloudClient.MarketingCloudException, IOException {
-        String visitorId = client.getVisitorID();
+        String visitorId = this.client.getVisitorID();
         final String expectedUrl = String.format("https://dpm.demdex.net/id?d_mid=%s&d_ver=2&dcs_region=%d&d_orgid=%s&d_rtbd=json&d_cid_ic=%s%%01%s", visitorId, region, organizationId, DEFAULT_INTEGRATION_CODE, customerId);
         final Map<MCVIDAuthState, String> expectedUrlsWithAuthState = new HashMap<>();
         expectedUrlsWithAuthState.put(MCVIDAuthState.MCVIDAuthStateUnknown, expectedUrl + "%01" + MCVIDAuthState.MCVIDAuthStateUnknown.getState());
@@ -83,31 +83,31 @@ public class MarketingCloudClientTest {
     @Test(expected = MarketingCloudClient.MarketingCloudException.class)
     public void idSync_invalidVisitorId() throws MarketingCloudClient.MarketingCloudException, IOException {
         String vid = "this is invalid big time";
-        client.idSync(vid, DEFAULT_INTEGRATION_CODE, customerId, MCVIDAuthState.MCVIDAuthStateUnknown);
+        this.client.idSync(vid, DEFAULT_INTEGRATION_CODE, customerId, MCVIDAuthState.MCVIDAuthStateUnknown);
     }
 
     @Test
     public void readResponse() throws MarketingCloudClient.MarketingCloudException, IOException {
         String input = "{ \"d_mid\": \"testVisitorId\" }";
-        client.readResponse(new ByteArrayInputStream(input.getBytes()));
+        this.client.readResponse(new ByteArrayInputStream(input.getBytes()));
     }
 
     @Test(expected = MarketingCloudClient.MarketingCloudException.class)
     public void readResponse_errors() throws MarketingCloudClient.MarketingCloudException, IOException {
         String input = "{ \"errors\": [ { \"msg\": \"my error\", \"code\": 12 } ] }";
-        client.readResponse(new ByteArrayInputStream(input.getBytes()));
+        this.client.readResponse(new ByteArrayInputStream(input.getBytes()));
     }
 
     @Test(expected = MarketingCloudClient.MarketingCloudException.class)
     public void readResponse_eofJson() throws MarketingCloudClient.MarketingCloudException, IOException {
         String input = "{ \"errors\": [ { ";
-        client.readResponse(new ByteArrayInputStream(input.getBytes()));
+        this.client.readResponse(new ByteArrayInputStream(input.getBytes()));
     }
 
     @Test(expected = MarketingCloudClient.MarketingCloudException.class)
     public void readResponse_invalidJson() throws MarketingCloudClient.MarketingCloudException, IOException {
         String input = "sdad [ { ";
-        client.readResponse(new ByteArrayInputStream(input.getBytes()));
+        this.client.readResponse(new ByteArrayInputStream(input.getBytes()));
     }
 
     @Test(expected = MarketingCloudClient.MarketingCloudException.class)
@@ -115,7 +115,7 @@ public class MarketingCloudClientTest {
         HttpURLConnection connection = Mockito.mock(HttpURLConnection.class);
         Mockito.when(connection.getResponseCode()).thenReturn(500);
 
-        client.sendRequest(mockUrl(connection));
+        this.client.sendRequest(mockUrl(connection));
     }
 
     @Test(expected = MarketingCloudClient.MarketingCloudException.class)
@@ -123,12 +123,12 @@ public class MarketingCloudClientTest {
         HttpURLConnection connection = Mockito.mock(HttpURLConnection.class);
         Mockito.when(connection.getHeaderField("Content-Type")).thenReturn("text/plain");
 
-        client.sendRequest(mockUrl(connection));
+        this.client.sendRequest(mockUrl(connection));
     }
 
     @Test
     public void createVisitorIdUrl() {
-        String builtUrl = client.createUrl(new HashMap<String, String>()).toString();
+        String builtUrl = this.client.createUrl(new HashMap<String, String>()).toString();
         String expectedUrl = String.format("https://dpm.demdex.net/id?d_ver=2&dcs_region=%d&d_orgid=%s&d_rtbd=json", region, organizationId);
         Assert.assertEquals(expectedUrl, builtUrl);
 
