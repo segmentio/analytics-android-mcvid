@@ -37,12 +37,12 @@ public class MarketingCloudClientTest {
     @Before
     public void initialize() {
 
-        this.organizationId = DEFAULT_TEST_ORGANIZATION_ID;
-        this.customerId = DEFAULT_CUSTOMER_ID;
+        organizationId = DEFAULT_TEST_ORGANIZATION_ID;
+        customerId = DEFAULT_CUSTOMER_ID;
 
         String regionVar = DEFAULT_TEST_REGION;
         if (regionVar != null && !regionVar.equals("")) {
-            this.region = Integer.parseInt(regionVar);
+            region = Integer.parseInt(regionVar);
         }
 
         this.client = new MarketingCloudClient.HttpClient(this.organizationId, this.region);
